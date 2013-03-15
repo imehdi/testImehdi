@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<definitions name="SAPMaretplace"
+        targetNamespace="http://eclipse.org/bpel/sample"
+        xmlns:tns="http://eclipse.org/bpel/sample"
+        xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
+        xmlns="http://schemas.xmlsoap.org/wsdl/"
+        xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+        >
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     TYPE DEFINITION - List of services participating in this BPEL process 
+     The default output of the BPEL designer uses strings as input and 
+     output to the BPEL Process. But you can define or import any XML 
+     Schema type and us them as part of the message types.
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->    
+    <types>  
+        <schema attributeFormDefault="unqualified" 
+                elementFormDefault="qualified" 
+                targetNamespace="http://eclipse.org/bpel/sample" 
+                xmlns="http://www.w3.org/2001/XMLSchema"
+                >
+                
+            <element name="SAPMaretplaceRequest">
+                <complexType>
+                    <sequence>
+                        <element name="input" type="string" />
+                    </sequence>
+                </complexType>
+            </element>
+                  
+            <element name="SAPMaretplaceResponse">
+                <complexType>
+                    <sequence>
+                        <element name="result" type="string"/>
+                    </sequence>
+                </complexType>
+            </element>
+            
+        </schema>
+    </types>
+  
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     MESSAGE TYPE DEFINITION - Definition of the message types used as 
+     part of the port type defintions
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->    
+    <message name="SAPMaretplaceRequestMessage">
+        <part name="payload" element="tns:SAPMaretplaceRequest"/>
+    </message>
+    
+    <message name="SAPMaretplaceResponseMessage">
+        <part name="payload" element="tns:SAPMaretplaceResponse"/>
+    </message>
+
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     PORT TYPE DEFINITION - A port type groups a set of operations into
+     a logical service unit.
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <!-- portType implemented by the SAPMaretplace BPEL process -->
+    <portType name="SAPMaretplace">
+        <operation name="initiate">
+            <input message="tns:SAPMaretplaceRequestMessage"/>
+        </operation>
+    </portType>
+
+    <!-- portType implemented by the requester of SAPMaretplace BPEL process 
+         for asynchronous callback purposes
+         -->
+    <portType name="SAPMaretplaceCallback">
+        <operation name="onResult">
+            <input message="tns:SAPMaretplaceResponseMessage"/>
+        </operation>
+    </portType>
+
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     PARTNER LINK TYPE DEFINITION
+         the SAPMaretplace partnerLinkType binds the provider and
+         requester portType into an asynchronous conversation.
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->    
+    <plnk:partnerLinkType name="SAPMaretplace">
+        <plnk:role name="SAPMaretplaceProvider" portType="tns:SAPMaretplace"/>
+        <plnk:role name="SAPMaretplaceRequester" portType="tns:SAPMaretplaceCallback"/>
+    </plnk:partnerLinkType>   
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     BINDING DEFINITION - Defines the message format and protocol details
+     for a web service.
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <binding name="SAPMaretplaceBinding" type="tns:SAPMaretplace" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/">
+    	<http:binding verb="POST" />
+    	<operation name="initiate">
+    		<http:operation location="/initiate" />
+    		<input>
+    			<mime:content type="text/xml"  part="payload"/>
+    		</input>
+    	</operation>
+    </binding>
+
+    <binding name="SAPMaretplaceCallbackBinding" type="tns:SAPMaretplaceCallback" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/">
+    	<http:binding verb="POST" />
+    	<operation name="onResult">
+    		<http:operation location="/onResult" />
+    		<input>
+    			<mime:content type="text/xml" part="payload"/>
+    		</input>
+    	</operation>
+    </binding>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     SERVICE DEFINITION - A service groups a set of ports into
+     a service unit.
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <service name="SAPMaretplaceService">
+        <port name="SAPMaretplacePort" binding="tns:SAPMaretplaceBinding">
+    		<http:address location="http://localhost:8080/SAPMaretplace"/>
+        </port>
+    </service>
+
+    <service name="SAPMaretplaceServiceCallback">
+        <port name="SAPMaretplacePortCallbackPort" binding="tns:SAPMaretplaceCallbackBinding">
+    		<http:address location="http://localhost:8080/SAPMaretplaceCallback"/>
+        </port>
+    </service>
+</definitions>
